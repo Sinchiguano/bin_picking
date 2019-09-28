@@ -1,0 +1,8 @@
+prefix=/home/casch/catkin_ws/install
+
+Name: rct_examples
+Description: Description of rct_examples
+Version: 0.1.0
+Cflags: 
+Libs: -L/home/casch/catkin_ws/install/lib 
+Requires: 

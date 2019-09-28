@@ -1,0 +1,2 @@
+/usr/bin/ar qc /home/casch/catkin_ws/devel/lib/libgrabber.a  CMakeFiles/grabber.dir/src/Grabber.cpp.o CMakeFiles/grabber.dir/usr/include/smartekvision/camerasuite/smcs_cpp/CameraSDK.cpp.o
+/usr/bin/ranlib /home/casch/catkin_ws/devel/lib/libgrabber.a

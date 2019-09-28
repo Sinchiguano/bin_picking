@@ -1,0 +1,7 @@
+\subsubsection usage Usage
+\verbatim
+<node name="smartek_camera" pkg="smartek_camera" type="smartek_camera">
+  <param name="ExposureTime" type="double" value="20000.0" />
+</node>
+\endverbatim
+

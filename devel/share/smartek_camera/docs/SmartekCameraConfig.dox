@@ -1,0 +1,6 @@
+\subsubsection parameters ROS parameters
+
+Reads and maintains the following parameters on the ROS server
+
+- \b "~ExposureTime" : \b [double] Exposure time (us) min: 200.0, default: 20000.0, max: 200000.0
+

@@ -1,0 +1,8 @@
+prefix=/home/casch/catkin_ws/devel
+
+Name: rct_ros_tools
+Description: Description of rct_ros_tools
+Version: 0.1.0
+Cflags: -I/home/casch/catkin_ws/src/robot_cal_tools/rct_ros_tools/include
+Libs: -L/home/casch/catkin_ws/devel/lib -lrct_ros_tools_data_loader -lyaml-cpp
+Requires: roscpp

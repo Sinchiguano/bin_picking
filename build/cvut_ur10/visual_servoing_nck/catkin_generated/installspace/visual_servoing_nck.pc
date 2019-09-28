@@ -1,0 +1,8 @@
+prefix=/home/casch/catkin_ws/install
+
+Name: visual_servoing_nck
+Description: Description of visual_servoing_nck
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/casch/catkin_ws/install/lib 
+Requires: moveit_core moveit_ros_planning pluginlib sensor_msgs trajectory_msgs nav_msgs geometry_msgs

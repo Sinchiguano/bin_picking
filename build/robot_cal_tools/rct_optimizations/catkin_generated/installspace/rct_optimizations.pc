@@ -1,0 +1,8 @@
+prefix=/home/casch/catkin_ws/install
+
+Name: rct_optimizations
+Description: Description of rct_optimizations
+Version: 0.1.0
+Cflags: -I/home/casch/catkin_ws/install/include
+Libs: -L/home/casch/catkin_ws/install/lib -lrct_optimizations /usr/local/lib/libceres.a
+Requires: 

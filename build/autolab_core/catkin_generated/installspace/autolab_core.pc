@@ -1,0 +1,8 @@
+prefix=/home/casch/catkin_ws/install
+
+Name: autolab_core
+Description: Description of autolab_core
+Version: 0.0.12
+Cflags: -I/home/casch/catkin_ws/install/include
+Libs: -L/home/casch/catkin_ws/install/lib 
+Requires: 

@@ -1,0 +1,2 @@
+autolab_core:smartek_camera-camera_suite:timesync:yumi_cobot:yumipy
+-DCATKIN_DEVEL_PREFIX=/home/casch/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/casch/catkin_ws/install -G Unix Makefiles

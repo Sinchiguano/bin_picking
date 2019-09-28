@@ -1,0 +1,2 @@
+set(robotiq_3f_gripper_control_MESSAGE_FILES "msg/Robotiq3FGripper_robot_input.msg;msg/Robotiq3FGripper_robot_output.msg")
+set(robotiq_3f_gripper_control_SERVICE_FILES "")

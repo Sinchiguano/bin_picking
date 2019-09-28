@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>rct_optimizations</name>
+  <version>0.1.0</version>
+  <description>The rct_optimizations package</description>
+
+  <maintainer email="jmeyer1292@gmail.com">Jonathan Meyer</maintainer>
+
+  <author email="jmeyer1292@gmail.com">Jonathan Meyer</author>
+
+  <!-- The code in this package is lifted heavily from the work of Chris Lewis and the
+  efforts of Geoffrey Chiou on behalf of SwRI to create simpler, more contained
+  tools -->
+  <author>Geoffrey Chiou</author>
+  <author email="clewis@swri.org">Chris Lewis</author>
+
+  <license>Apache 2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>libceres-dev</depend>
+</package>

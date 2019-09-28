@@ -1,0 +1,2 @@
+/usr/bin/ar qc /home/casch/catkin_ws/devel/lib/libprotobuf_twist.a  CMakeFiles/protobuf_twist.dir/speeds.pb.cc.o
+/usr/bin/ranlib /home/casch/catkin_ws/devel/lib/libprotobuf_twist.a
