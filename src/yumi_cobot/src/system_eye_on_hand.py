@@ -15,12 +15,11 @@ import pcl
 import csv
 import time
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
-######################################
-
 import sys
 from yumipy import YuMiRobot
 from yumipy import YuMiState,YuMiArm_ROS
 from autolab_core import RigidTransform
+from std_msgs.msg import Bool
 
 
 model_path='pipeline_model/template_real/'
@@ -28,6 +27,17 @@ scene_path='pipeline_pcd/'
 
 tmp='output_pipeline/'
 name_file=tmp+'transform_data.csv'
+#Home position-->> initialize the robot wherever it is!!!
+home_left= [0.0, -130.0, 30.0, 0.01, 39.59, 0.0, 135.0]
+home_right= [0.0, -130.0, 30.0, 0.0, 39.98, 0.0, -135.0]
+tool_cesar_cal = RigidTransform(np.array([ [-1, 0,  0],[0,-1,  0],[0, 0, 1]]),np.array([0, 0.0, 0.1142]))
+
+counter1=0
+counter2=0
+counter3=0
+flag=False
+threshold = 0.02
+
 
 def do_pointcloud(frame,pc,counter):
     global scene_path
@@ -190,44 +200,42 @@ def do_publishing_pose(br,transformation):
     print('pose_translation \n{}'.format(t.transform.translation))
     print('pose_quaternion \n{}'.format(t.transform.rotation))
 
-def main():
-    counter1=0
-    counter2=0
-    counter3=0
-    flag=False
-    threshold = 0.02
 
-    #Home position-->> initialize the robot wherever it is!!!
-    home_left= [0.0, -130.0, 30.0, 0.01, 39.59, 0.0, 135.0]
-    home_right= [0.0, -130.0, 30.0, 0.0, 39.98, 0.0, -135.0]
+
+def main():
+    global counter1,counter2,counter3,flag,threshold
+    global home_left,home_right,tool_cesar_cal
+    templateID=str(0)
+    contronlSIGNAL=Bool(False)
 
     br = tf2_ros.TransformBroadcaster()
-    rate = rospy.Rate(10) # 10hz
-
-    tool_cesar_cal = RigidTransform(np.array([ [-1, 0,  0],
-                                            [0,-1,  0],
-                                            [0, 0, 1]]),np.array([0, 0.0, 0.1142]))
-
+    # Publishing bool variable and id of the template to execute the movement of the robot
+    pub_template = rospy.Publisher('/templateID', String, queue_size=10)
+    pub_control = rospy.Publisher('/signalControl', Bool, queue_size=10)
 
     y = YuMiRobot(arm_type='remote')
 
     y.left.set_tool(tool_cesar_cal)
     y.right.set_tool(tool_cesar_cal)
+    y.right.close_gripper(no_wait=False, wait_for_res=True)
+    y.left.close_gripper(no_wait=False, wait_for_res=True)
 
     #send to home position both arm
     y.left.goto_state(YuMiState(home_left),wait_for_res=False)
     y.right.goto_state(YuMiState(home_right),wait_for_res=False)
 
 
-    #send the right arm into the camera-home position
-    # #1 like a normal confiration
+
+
+    # Send the right arm into the camera-home position
+    # default setup
     # y.right.goto_state(YuMiState([67.66, -129.36, 35.79, -98.77, -63.57, -3.24, -139.03]),wait_for_res=False)
-    # from top to down
+    # top-to-down setup
     y.right.goto_state(YuMiState([60.25, -16.19, 58.96, 99.07, -72.78, 17.36, -23.21]),wait_for_res=False)
 
     pose_state_left = y.left.get_pose(raw_res=False)
-    print('pose_state_left.quaternion: {}'.format(pose_state_left.quaternion))
-    print('pose_state_left.translation: {}'.format(pose_state_left.translation))
+    # print('pose_state_left.quaternion: {}'.format(pose_state_left.quaternion))
+    # print('pose_state_left.translation: {}'.format(pose_state_left.translation))
     tmp=pose_state_left.quaternion
     aux=pose_state_left.translation
     #orientation_list = [tmp[1],tmp[2],tmp[3],tmp[0]]
@@ -235,17 +243,14 @@ def main():
     transformation_[0,3]=aux[0]
     transformation_[1,3]=aux[1]
     transformation_[2,3]=aux[2]
-    print(transformation_)
-
     transformation_right=copy.deepcopy(transformation_)
-
     transformation_awkward= quaternion_matrix([0, 0, 0, 1])
     transformation_awkward[0,3]=0.0
     transformation_awkward[1,3]=0.0
     transformation_awkward[2,3]=0.0
-    #exit(0)
 
 
+    rate = rospy.Rate(10)
     while not rospy.is_shutdown():
         counter1+=1
 
@@ -265,7 +270,7 @@ def main():
         #Enter to process a depth image and generate the 6D pose estimation
         command=cv2.waitKey(1) & 0xFF
         print('Ready to take scene data!!!')
-        print('press t to take a scene image...')
+        print('press t to catch an example (PointCoud data)...')
         if command == ord('t'):
             #y.right.goto_state(YuMiState([58.66, -15.47, 34.38, 93.23, -62.16, -3.32, -34.6]),wait_for_res=False)
             try:
@@ -277,7 +282,7 @@ def main():
                 print(ex)
                 continue
             counter2+=1
-            #--------------------------------------------------------
+
             # Threshold
             filter = do_passthrough_filter(point_cloud = cloud,name_axis = 'x', min_axis = 0.33, max_axis = 0.65)
             filter = do_passthrough_filter(point_cloud = filter,name_axis = 'y', min_axis = -0.25, max_axis = 0.25)
@@ -285,32 +290,23 @@ def main():
             print('filter done!')
 
             # Segmentation process in order to separate the object from table
-            #--------------------------------------------------------
-            #
             table, objects = do_ransac_plane_segmentation(filter, max_distance = 0.01)
             pcl.save(objects,scene_path +'objects_'+str(counter2)+'.pcd' )
             print('segmentation done!')
 
             pcd = read_point_cloud(scene_path+'objects_'+str(counter2)+'.pcd')
             write_point_cloud(scene_path +'objects_'+str(counter2)+'.ply', pcd)
-            print('change done')
-
+            print('data convertion done!')
 
             #The target cloud is a scene image, it is already mapped into the world coordinate system (T: World -> Camera)
             target=read_point_cloud(scene_path+'objects_'+str(counter2)+'.pcd')
             print('upload target done!')
 
-
             #Template to match with the image taken from scene
-            template_ = [read_point_cloud(rgbd) for rgbd in glob.glob(model_path+'template*'+'.ply')]
+            template_ = [read_point_cloud(rgbd) for rgbd in glob.glob(model_path+'*'+'.ply')]
+            #template_.sort()
             print('upload templates done!')
 
-
-            '''
-            Function evaluate_registration calculates two main metrics.
-            fitness measures the overlapping area (# of inlier correspondences / # of points in target). Higher the better.
-            inlier_rmse measures the RMSE of all inlier correspondences. Lower the better.
-            '''
             max_fitness=0.5
             max_fitness_index=0
             rmse=0.0
@@ -318,25 +314,20 @@ def main():
             fitness_=list()
 
             for i, source in enumerate(template_):
-                
+
                 #DOWNSAMPLE AND COMPUTE FAST POINT FEATURE HISTOGRAM-->PREPROCESSING STEP: DATA MANIPULATION OF THE POINT CLOUD
                 source, target, source_down, target_down, source_fpfh, target_fpfh=do_dataset(source,target)
                 #draw_geometries([source,target])
-                #exit()
-
                 #RANSAC REGISTRATION-->>global registration
                 #-------------------
                 ransac_output_tmp=do_ransac_registration(source_down, target_down, source_fpfh, target_fpfh )
                 print('ransac done!')
                 #do_drawing_registration(source_down, target_down, ransac_output_tmp.transformation)
-
                 #ICP REGISTRATION -->>local registration, point to plane approach
                 #-------------------
                 icp_output_tmp = do_icp_registration(source_down, target_down,ransac_output_tmp.transformation)
                 print('icp done!')
                 #do_drawing_registration(source_down, target_down, icp_output_tmp.transformation)
-                
-
                 rmse_.append(icp_output_tmp.inlier_rmse)
                 fitness_.append(icp_output_tmp.fitness)
                 if icp_output_tmp.fitness>max_fitness:
@@ -344,15 +335,18 @@ def main():
                     min_rmse=icp_output_tmp.inlier_rmse
                     source_=template_[i]
                     transformation_=icp_output_tmp.transformation
+                    templateID=str(i+1)
+                    contronlSIGNAL=Bool(True)
             do_drawing_registration(source_, target, transformation_)
 
-            if not icp_output_tmp.transformation[0,3]==transformation_awkward[0,3] and  not icp_output_tmp.transformation[1,3]==transformation_awkward[1,3]:
-                do_publishing_pose(br,transformation_)
-            else:
+            if icp_output_tmp.transformation[0,3]==transformation_awkward[0,3] and  icp_output_tmp.transformation[1,3]==transformation_awkward[1,3]:
                 transformation_=transformation_right
                 do_publishing_pose(br,transformation_)
+
             y.right.goto_state(YuMiState(home_right),wait_for_res=False)
         do_publishing_pose(br,transformation_)
+        pub_template.publish(templateID)
+        pub_control.publish(contronlSIGNAL)
 
         cv2.imshow('frame',frame)
     cv2.destroyAllWindows()
@@ -362,45 +356,11 @@ if __name__ == '__main__':
     main()
 
 
+## NOTE:
 
-
-
-
-
-
-# #Template to match with the image taken from scene
-# template_ = [read_point_cloud(rgbd) for rgbd in glob.glob(model_path+'template*'+'.ply')]
 #
-# start = time.time()
-# max_fitness=0.5
-# max_fitness_index=0
-# rmse=0.0
-# rmse_=list()
-# fitness_=list()
-# for i, source in enumerate(template_):
-#     #DOWNSAMPLE AND COMPUTE FAST POINT FEATURE HISTOGRAM-->PREPROCESSING STEP: DATA MANIPULATION OF THE POINT CLOUD
-#     source, target, source_down, target_down, source_fpfh, target_fpfh=do_dataset(source,target)
-#     #draw_geometries([source_down,target_down])
-#
-#     #RANSAC REGISTRATION-->>global registration
-#     #-------------------
-#     ransac_output_tmp=do_ransac_registration(source_down, target_down, source_fpfh, target_fpfh )
-#
-#     #ICP REGISTRATION -->>local registration, point to plane approach
-#     #-------------------
-#     icp_output_tmp = do_icp_registration(source, target,ransac_output_tmp.transformation)
-#     end = time.time()
-#     rmse_.append(icp_output_tmp.inlier_rmse)
-#     fitness_.append(icp_output_tmp.fitness)
-#     if icp_output_tmp.fitness>max_fitness:
-#         #print('New max_fitness')
-#         max_fitness=icp_output_tmp.fitness
-#         min_rmse=icp_output_tmp.inlier_rmse
-#         icp_output=icp_output_tmp
-#         ransac_output=ransac_output_tmp
-#         source_=template_[i]
-#         transformation=icp_output.transformation
-#         #do_csv_file(icp_output.transformation,counter1,[end - start],[max_fitness],[min_rmse],rmse_,fitness_)
-#         #do_drawing_registration(source_, target, ransac_output.transformation)
-#         do_drawing_registration(source_, target, icp_output.transformation)
-# do_publishing_pose(br,transformation)
+# '''
+# Function evaluate_registration calculates two main metrics.
+# fitness measures the overlapping area (# of inlier correspondences / # of points in target). Higher the better.
+# inlier_rmse measures the RMSE of all inlier correspondences. Lower the better.
+# '''

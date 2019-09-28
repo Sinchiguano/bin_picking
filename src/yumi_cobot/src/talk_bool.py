@@ -19,7 +19,7 @@ def talker():
 
     rospy.init_node('talker', anonymous=True)
     rate = rospy.Rate(10) # 10hz
-    
+
     tmp = Bool()
     tmp=True
 
@@ -27,7 +27,7 @@ def talker():
         hello_str = "hello world %s" % rospy.get_time()
         rospy.loginfo(hello_str)
         pub.publish(hello_str)
-        
+
         pub_bool.publish(Bool(True))
         rate.sleep()
 

@@ -59,7 +59,7 @@ def pose_to_tf(br,pose_translation,pose_quaternion):
 
 
 ####################################################################
-#Home setup for the robot-camera calibration 
+#Home setup for the robot-camera calibration
 # 1 near to the robot base
 # state_left: [0.0, -130.0, 30.0, 0.01, 39.59, 0.0, 135.0]
 # state_right: here [67.66, -129.36, 35.79, -98.77, -63.57, -3.24, -139.03]

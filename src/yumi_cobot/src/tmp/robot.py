@@ -16,12 +16,12 @@ from yumipy import YuMiRobot
 from yumipy import YuMiState,YuMiArm_ROS
 from autolab_core import RigidTransform
 
-# #Wednesaday 14_August_2019
-home_left=[0.0, -130.0, 30.0, 0.0, 39.53, 0.0, 135.0]
-home_right=[0.0, -130.0, 30.0, 0.0, 39.95, -1.76, -134.66]
+# Tuesday 03_September_2019
+home_left= [0.0, -130.0, 30.0, 0.01, 39.59, 0.0, 135.0]
+home_right= [0.0, -130.0, 30.0, 0.0, 39.98, 0.0, -135.0]
+
 # confdata [-1,-1,0,3]
 
-qtn_temp= [-0.03201502 , 0.99946886, -0.00600282, -0.00100047]
 
 #End Effector...
 tool_cesar_cal = RigidTransform(np.array([ [-1, 0,  0],
@@ -34,8 +34,6 @@ g_index_last_move = 0
 #home demo position to be close to the target
 moves_deg = np.array([[-91.98, -44.15, 21.6, 111.06, 71.47, -69.94, 87.21]])
 
-
-#home_industrial_obj=[-104.07, -71.35, -36.44, 132.22, 84.2, -87.31, 42.0]
 
 #Tuesday 03_September_2019
 home_industrial_obj=[-103.96, -79.35, -14.57, 136.16, 91.4, -102.65, 45.55]
@@ -77,8 +75,8 @@ def main():
     rospy.init_node('tcp_tf', anonymous=True)
     br = tf2_ros.TransformBroadcaster()
     listener = tf.TransformListener()
-    
-    
+
+
     y = YuMiRobot(arm_type='remote')
     y.left.set_tool(tool_cesar_cal)
     y.right.set_tool(tool_cesar_cal)
@@ -99,10 +97,16 @@ def main():
     orientation_list = [tmp[1],tmp[2],tmp[3],tmp[0]]
     (roll_default, pitch_default, yaw_default)=tf.transformations.euler_from_quaternion(orientation_list)
 
-    #exit(0)
+    #Home position for both arms
+    y.left.goto_state(YuMiState(home_left))
+    y.right.goto_state(YuMiState(home_right))
+
+    y.right.close_gripper(no_wait=False, wait_for_res=True)
+    y.left.close_gripper(no_wait=False, wait_for_res=True)
+
     while (not rospy.is_shutdown()):
 
-        
+
         try:
             (trans,rot) = listener.lookupTransform('/world','/pose_object', rospy.Time(0))
             from tf.transformations import euler_from_quaternion, quaternion_from_euler
@@ -116,7 +120,7 @@ def main():
             q_new/=np.linalg.norm(q_new)
             r_new = quaternion_matrix(q_new)
             print(trans, rot)
-            time.sleep(3)
+            #time.sleep(0.5)
 
             if not trans==None and not rot==None and not previous_trans==trans:
                 pose_state.translation=trans
@@ -129,16 +133,39 @@ def main():
 
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             continue
-        
+
         if temp_flag:
             state_robot=y.left.goto_pose(pose_state, linear=True, relative=False, wait_for_res=True)
             y.left.open_gripper(no_wait=False, wait_for_res=True)
             pose_state.translation[2]=0.065
             state_robot=y.left.goto_pose(pose_state, linear=True, relative=False, wait_for_res=True)
             y.left.close_gripper(force=20,no_wait=False, wait_for_res=True)
+
+            #trick, close to my target
             move(y)
-            y.left.goto_state(YuMiState(home_industrial_obj),wait_for_res=False)
+
+            #pass to the  neighbour
+            y.left.goto_state(YuMiState([-61.29, -71.92, 41.76, 24.64, 52.57, -98.59, 42.29]),wait_for_res=False)
+
+            #exit()
+            y.right.open_gripper(no_wait=False, wait_for_res=True)
+            y.right.goto_state(YuMiState([33.48, -62.78, 42.07, 17.64, 59.23, 51.12, -51.25]),wait_for_res=False)
+            y.right.goto_state(YuMiState([43.34, -53.12, 45.03, 25.98, 44.11, 46.03, -51.48]),wait_for_res=False)
+            y.right.close_gripper(no_wait=False, wait_for_res=True)
+
             y.left.open_gripper(no_wait=False, wait_for_res=True)
+            y.left.goto_state(YuMiState([-73.79, -58.85, 17.81, 22.09, 59.32, -97.01, 45.38]),wait_for_res=False)
+
+
+            #home industrial object for the right side
+            y.right.goto_state(YuMiState([46.31, -65.96, 38.6, 9.26, -24.89, -0.75, -100.17]),wait_for_res=False)
+            y.right.open_gripper(no_wait=False, wait_for_res=True)
+
+            #Home position for both arms
+            y.left.goto_state(YuMiState(home_left))
+            y.right.goto_state(YuMiState(home_right))
+            y.right.close_gripper(no_wait=False, wait_for_res=True)
+            y.left.close_gripper(force=20,no_wait=False, wait_for_res=True)
             temp_flag=False
 
         print('moving!!!')
