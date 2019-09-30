@@ -115,6 +115,13 @@ def move_home(y):
     y.left.close_gripper(force=20,no_wait=False, wait_for_res=True)
     y.left.goto_state(YuMiState(home_left))
     y.right.goto_state(YuMiState(home_right))
+
+def right_arm_object_home(y):
+    y.right.goto_state(YuMiState([75.15, -100.96, -18.03, -42.78, 114.05, -18.28, -34.01]),wait_for_res=False)
+    y.right.goto_state(YuMiState([81.72, -95.07, -38.22, -47.53, 117.96, -32.22, -39.26]),wait_for_res=False)# in order not to collide
+    y.right.open_gripper(no_wait=False, wait_for_res=True)# drop the object
+    #previous pose, after then it will go home
+    y.right.goto_state(YuMiState([75.15, -100.96, -18.03, -42.78, 114.05, -18.28, -34.01]),wait_for_res=False)
 def main():
     global tool_cesar_cal
     counter=0.0
@@ -128,7 +135,6 @@ def main():
     listener = tf.TransformListener()
     rospy.Subscriber('/templateID', String, callback_templateID)
     rospy.Subscriber('/signalControl', Bool, callback_signalControl)
-
 
     y = YuMiRobot(arm_type='remote')
     y.left.set_tool(tool_cesar_cal)
@@ -201,15 +207,8 @@ def main():
             elif templateID=='2':
                 move_rightARM(y)
 
-            # #home industrial object for the right side---->>>>
-            # y.right.goto_state(YuMiState([46.31, -65.96, 38.6, 9.26, -24.89, -0.75, -100.17]),wait_for_res=False)
-            # y.right.open_gripper(no_wait=False, wait_for_res=True)
-
-
             #home industrial object for the right side---->>>>
-            y.right.goto_state(YuMiState([65.2, -108.57, 6.18, 27.06, 30.48, -76.36, -67.19]),wait_for_res=False)
-            y.right.open_gripper(no_wait=False, wait_for_res=True)# drop the object
-            y.right.goto_state(YuMiState([54.64, -113.19, 35.4, -0.49, 7.86, -40.14, -52.73]),wait_for_res=False)# in order not to collide
+            right_arm_object_home(y)
 
 
             move_home(y)
