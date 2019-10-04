@@ -186,7 +186,7 @@ def do_publishing_pose(br,transformation):
     t.header.stamp = rospy.Time.now()
     t.header.frame_id = 'world'
     t.child_frame_id = 'pose_object'
-    t.transform.translation.x = pose_translation[0]-0.01
+    t.transform.translation.x = pose_translation[0]-0.013
     t.transform.translation.y = pose_translation[1]+0.015
     t.transform.translation.z = pose_translation[2]+0.10
     t.transform.rotation.w = pose_quaternion[3]

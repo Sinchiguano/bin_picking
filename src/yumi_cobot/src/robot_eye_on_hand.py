@@ -80,32 +80,36 @@ def callback_signalControl(data):
     pass
     #rospy.loginfo(rospy.get_caller_id() + "signalControl:  %s", data.data)
 
-def move_leftARM(y):
+def move_leftARM_1(y):
     #pose correction before interchange the object
-    y.left.goto_state(YuMiState([-42.63, -47.53, 51.2, 70.88, 89.62, -66.38, 14.45]),wait_for_res=False)
+    y.left.goto_state(YuMiState([-42.6, -47.15, 53.72, 70.92, 88.12, -79.43, 13.5]),wait_for_res=False)
 
     #corretion of the orientation of the right arm
     y.right.goto_state(YuMiState([51.28, -57.55, 41.39, 8.12, 47.69, 54.93, -61.18]),wait_for_res=False)
     #get close to the exchange point
-    y.right.goto_state(YuMiState( [67.57, -49.31, 42.8, 14.56, 31.15, 50.84, -68.12]),wait_for_res=False)
+    y.right.goto_state(YuMiState( [69.2, -49.29, 41.99, 14.45, 30.93, 49.83, -70.17]),wait_for_res=False)
+    #exit()
     y.right.close_gripper(no_wait=False, wait_for_res=True)
 
     #free the gripper of the left arm and move slight in the north direction
     y.left.open_gripper(no_wait=False, wait_for_res=True)
     y.left.goto_state(YuMiState([-36.57, -47.51, 46.42, 59.54, 95.69, -63.41, -1.04]),wait_for_res=False)
 
-def move_rightARM(y):
+def move_leftARM_2(y):
     #pose correction before interchange the object
-    y.left.goto_state(YuMiState([-52.71, -47.84, 58.19, 86.44, 83.62, -79.57, 31.13]),wait_for_res=False)
+    y.left.goto_state(YuMiState([-52.71, -47.84, 58.19, 86.23, 82.1, 95.85, 31.13]),wait_for_res=False)
 
     #corretion of the orientation of the right arm
     y.right.goto_state(YuMiState([43.62, -56.21, 34.67, 17.13, 60.46, 33.92, -73.57]),wait_for_res=False)
     #get close to the exchange point
-    y.right.goto_state(YuMiState([65.36, -48.48, 41.59, 31.42, 36.39, 22.68, -81.01]),wait_for_res=False)
+    y.right.goto_state(YuMiState([69.11, -47.67, 40.36, 32.7, 31.74, 21.65, -82.81]),wait_for_res=False)
+    #exit()
     y.right.close_gripper(no_wait=False, wait_for_res=True)
 
     #free the gripper of the left arm and move slight in the north direction
     y.left.open_gripper(no_wait=False, wait_for_res=True)
+    y.left.goto_state(YuMiState([-47.13, -47.51, 57.01, 75.11, 84.88, 97.96, 16.94]),wait_for_res=False)
+    #exit()
     y.left.goto_state(YuMiState([-43.74, -47.36, 55.23, 68.68, 88.53, -75.86, 8.33]),wait_for_res=False)
 
 def move_home(y):
@@ -190,7 +194,7 @@ def main():
             #grasping task
             state_robot=y.left.goto_pose(pose_state, linear=True, relative=False, wait_for_res=True)
             y.left.open_gripper(no_wait=False, wait_for_res=True)
-            pose_state.translation[2]=0.04
+            pose_state.translation[2]=0.025
             state_robot=y.left.goto_pose(pose_state, linear=True, relative=False, wait_for_res=True)
             y.left.close_gripper(force=20,no_wait=False, wait_for_res=True)
             move(y)#return to a close pose to the target
@@ -198,16 +202,19 @@ def main():
 
             #default bridge in order to pass the object to the  neighbour
             y.left.goto_state(YuMiState([-61.29, -71.92, 41.76, 24.64, 52.57, -98.59, 42.29]),wait_for_res=False)
+            #y.left.goto_state(YuMiState([-44.54, -48.05, 51.34, 72.81, 90.53, -74.01, 13.59]),wait_for_res=False)
+            
+
             y.right.open_gripper(no_wait=False, wait_for_res=True)
             y.right.goto_state(YuMiState([33.48, -62.78, 42.07, 17.64, 59.23, 51.12, -51.25]),wait_for_res=False)
 
             # correction in order to exchange the object from one arm to another
             if templateID=='1':
-                move_leftARM(y)
+                move_leftARM_1(y)
             elif templateID=='2':
-                move_rightARM(y)
+                move_leftARM_2(y)
 
-            #home industrial object for the right side---->>>>
+            #home object for the right side---->>>>
             right_arm_object_home(y)
 
 
