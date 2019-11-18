@@ -224,9 +224,6 @@ def main():
     y.left.goto_state(YuMiState(home_left),wait_for_res=False)
     y.right.goto_state(YuMiState(home_right),wait_for_res=False)
 
-
-
-
     # Send the right arm into the camera-home position
     # default setup
     # y.right.goto_state(YuMiState([67.66, -129.36, 35.79, -98.77, -63.57, -3.24, -139.03]),wait_for_res=False)
